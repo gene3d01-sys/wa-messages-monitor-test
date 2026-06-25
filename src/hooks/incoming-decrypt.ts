@@ -33,14 +33,14 @@ export function installDecryptHook(): boolean {
           _serialized: string;
         };
 
-        const withoutMessageContextInfo = {
+        const fullMessage = {
           ...decodedResult,
           contactName: tryGetContactName(user + "@" + server),
           fullJid: _serialized,
         };
 
         /// MessageCOntextInfo contains buffers that are not serializable, so we remove it before sending the message to the popup
-        delete withoutMessageContextInfo.messageContextInfo;
+        const withoutMessageContextInfo = removeBuffers(fullMessage);
 
         window.postMessage(
           {
@@ -81,4 +81,27 @@ function tryGetContactName(lid: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+//  When try parseing the message, we can get some buffers that are not serializable, so we remove them before sending the message to the popup
+function removeBuffers(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(removeBuffers);
+  }
+
+  if (typeof obj === "object") {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [key, removeBuffers(value)]),
+    );
+  }
+
+  if (obj instanceof ArrayBuffer || obj instanceof Uint8Array) {
+    return undefined; // or return null, or some placeholder value
+  }
+
+  return obj;
 }
