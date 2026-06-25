@@ -15,6 +15,9 @@ export default defineManifest({
   host_permissions: [
     'https://web.whatsapp.com/*',
   ],
+  background: {
+    service_worker: 'src/background.ts',
+  },
   side_panel: {
     default_path: 'src/sidepanel/index.html',
   },
