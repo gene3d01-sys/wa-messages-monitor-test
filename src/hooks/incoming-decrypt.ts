@@ -39,13 +39,13 @@ export function installDecryptHook(): boolean {
           fullJid: _serialized,
         };
 
-        /// MessageCOntextInfo contains buffers that are not serializable, so we remove it before sending the message to the popup
-        const withoutMessageContextInfo = removeBuffers(fullMessage);
+        /// message contains buffers that are not serializable, so we remove them before sending the message to the popup
+        const withoutBuffers = removeBuffers(fullMessage);
 
         window.postMessage(
           {
             type: "message",
-            data: withoutMessageContextInfo,
+            data: withoutBuffers,
           },
           "*",
         );
