@@ -37,7 +37,7 @@ Principais pontos:
 
 2. Entre na pasta do projeto:
 
-   cd wa-web-robot
+   cd wa-messages-monitor
 
 3. Instale as dependencias:
 
