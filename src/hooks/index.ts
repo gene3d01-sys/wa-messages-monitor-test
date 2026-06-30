@@ -3,7 +3,7 @@
 
 import { waitTillReady, waitForModules } from "./wa";
 import { installWamScrub } from "./wam-scrub";
-import { installDecryptHook } from "./incoming-decrypt";
+import { installDecryptHook, installStanzaHook } from "./incoming-decrypt";
 
 // Modules our hooks depend on. Most of these are lazy-loaded by WhatsApp after the user
 // authenticates and opens a chat for the first time, so we wait for them before binding
@@ -14,6 +14,7 @@ const REQUIRED_MODULES = [
   "WAWebSendTextMsgChatAction",
   "WAWebMsgProcessingDecryptEnc",
   "WAWebWamCodegenUtils",
+  "WAWap",
 ];
 
 console.info("[wa-scripts] page-world script booted");
@@ -28,20 +29,16 @@ console.info("[wa-scripts] page-world script booted");
   // Wait for the lazy-loaded chat/composer modules before installing module-level hooks.
   const missing = await waitForModules(REQUIRED_MODULES);
   if (missing.length) {
-    console.warn(
-      "[wa-scripts] some modules never loaded after 60s:",
-      missing,
-    );
+    console.warn("[wa-scripts] some modules never loaded after 60s:", missing);
   } else {
     console.info("[wa-scripts] all required modules loaded");
   }
 
   if (!scrubbed) scrubbed = installWamScrub();
   if (!scrubbed)
-    console.warn(
-      "[wa-scripts] wam scrub could not install (module not found)",
-    );
+    console.warn("[wa-scripts] wam scrub could not install (module not found)");
 
+  installStanzaHook();
   installDecryptHook();
   console.info("[wa-scripts] ready");
 })();

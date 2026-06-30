@@ -7,6 +7,9 @@ import { removeUnusedFields } from "@/utils/removeFields";
 type MessageData = {
   contactName: string;
   fullJid: string;
+  msgInfo: any;
+  bizInfo: any;
+  tags: any;
   result: any;
 };
 
@@ -118,6 +121,9 @@ function PopupApp() {
                 <tr>
                   <th>Contato</th>
                   <th>Resultado</th>
+                  <th>Tags</th>
+                  <th>Biz Info</th>
+                  <th>Msg Info</th>
                 </tr>
               </thead>
               <tbody>
@@ -130,8 +136,32 @@ function PopupApp() {
 
                     <td>
                       <pre className="result-code">
-                        {message
-                          ? JSON.stringify(removeUnusedFields(message), null, 2)
+                        {message.result
+                          ? JSON.stringify(removeUnusedFields(message.result), null, 2)
+                          : "Sem resultado"}
+                      </pre>
+                    </td>
+                    
+                     <td>
+                      <pre className="result-code">
+                        {message.tags
+                          ? JSON.stringify(removeUnusedFields(message.tags), null, 2)
+                          : "Sem resultado"}
+                      </pre>
+                    </td>
+
+                     <td>
+                      <pre className="result-code">
+                        {message.bizInfo
+                          ? JSON.stringify(removeUnusedFields(message.bizInfo), null, 2)
+                          : "Sem resultado"}
+                      </pre>
+                    </td>
+
+                     <td>
+                      <pre className="result-code">
+                        {message.msgInfo
+                          ? JSON.stringify(removeUnusedFields(message.msgInfo), null, 2)
                           : "Sem resultado"}
                       </pre>
                     </td>

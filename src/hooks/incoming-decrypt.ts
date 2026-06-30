@@ -14,6 +14,29 @@
 import { injectToFunction } from "./wa";
 
 let installed = false;
+let stanzaInstalled = false;
+
+const messagesStanzas = new Map<string, any>();
+
+function waitStanza(msgId: string, timeout = 5000): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const checkInterval = 100; // Check every 100ms
+    let elapsedTime = 0;
+
+    const intervalId = setInterval(() => {
+      if (messagesStanzas.has(msgId)) {
+        clearInterval(intervalId);
+        resolve(messagesStanzas.get(msgId));
+      } else {
+        elapsedTime += checkInterval;
+        if (elapsedTime >= timeout) {
+          clearInterval(intervalId);
+          reject(new Error(`Timeout waiting for stanza with msgId: ${msgId}`));
+        }
+      }
+    }, checkInterval);
+  });
+}
 
 export function installDecryptHook(): boolean {
   console.log("[wa-scripts] installing decrypt hook");
@@ -27,6 +50,11 @@ export function installDecryptHook(): boolean {
           require("WAWebProtobufsE2E.pb").MessageSpec,
           require("WACryptoPkcs7").unpadPkcs7(new Uint8Array(result)),
         );
+
+        const externalId = args[3]?.msgInfo?.externalId;
+        console.log("[wa-scripts] Decrypted message with externalId:", externalId);
+        const stanzaTags = externalId ? await waitStanza(externalId) : null;
+
         const { user, server, _serialized } = args[2] as {
           user: string;
           server: string;
@@ -36,7 +64,8 @@ export function installDecryptHook(): boolean {
         const fullMessage = {
           contactName: tryGetContactName(user + "@" + server),
           fullJid: _serialized,
-          ...decodedResult,
+          result: decodedResult,
+          tags: stanzaTags?.content || [],
           msgInfo: args[3].msgInfo,
           bizInfo: args[3].bizInfo,
         };
@@ -63,6 +92,34 @@ export function installDecryptHook(): boolean {
   if (ok) {
     installed = true;
     console.info("[wa-scripts] decrypt hook installed");
+  }
+  return ok;
+}
+
+export function installStanzaHook(): boolean {
+  console.log("[wa-scripts] installing stanza hook");
+  if (stanzaInstalled) return true;
+  const ok = injectToFunction(
+    { module: "WAWap", function: "decodeStanza" },
+    async (orig, ...args: any[]) => {
+      let result = await orig(...args);
+      try {
+        const msgId = result?.attrs?.id;
+
+        if (msgId) {
+          console.log("[wa-scripts] Stanza received with msgId:", msgId);
+          messagesStanzas.set(msgId, result);
+        }
+      } catch (err) {
+        console.warn("[wa-scripts] decrypt translate failed", err);
+      }
+
+      return result;
+    },
+  );
+  if (ok) {
+    stanzaInstalled = true;
+    console.info("[wa-scripts] stanza hook installed");
   }
   return ok;
 }
