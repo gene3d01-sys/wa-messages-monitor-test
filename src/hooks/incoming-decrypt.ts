@@ -159,7 +159,7 @@ function removeBuffers(obj: any): any {
   }
 
   if (obj instanceof ArrayBuffer || obj instanceof Uint8Array) {
-    return undefined; // or return null, or some placeholder value
+    return 'Removed Buffer'; // or return null, or some placeholder value
   }
 
   return obj;
